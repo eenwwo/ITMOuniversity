@@ -4,7 +4,7 @@ import moves.Phione.*;
 import ru.ifmo.se.pokemon.*;
 import moves.Petilil.*;
 
-public class Petilil extends Phione {
+public class Petilil extends Pokemon {
     public Petilil(String name, int level) {
         super(name, level);
         setType(Type.GRASS);

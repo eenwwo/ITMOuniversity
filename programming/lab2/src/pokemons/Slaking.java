@@ -10,7 +10,7 @@ public class Slaking extends Vigoroth {
         super(name, level);
         setType(Type.NORMAL);
         setStats(150, 160, 100, 95, 65, 100);
-        setMove(new ShadowClaw(), new Rest(), new FocusEnergy(), new Scratch());
+        setMove(new Scratch());
     }
 
 }

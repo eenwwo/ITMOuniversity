@@ -10,7 +10,7 @@ public class Lilligant extends Petilil {
         super(name, level);
         setType(Type.GRASS);
         setStats(70, 60, 75, 110, 75, 90);
-        setMove(new DoubleTeam(), new Swagger(), new EnergyBall(), new PetalBlizzard());
+        setMove(new PetalBlizzard());
     }
 
 }

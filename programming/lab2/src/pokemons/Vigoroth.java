@@ -9,7 +9,7 @@ public class Vigoroth extends Slakoth {
         super(name, level);
         setType(Type.NORMAL);
         setStats(60, 60, 60, 35, 35, 30);
-        setMove(new ShadowClaw(), new Rest(), new FocusEnergy());
+        setMove(new FocusEnergy());
     }
 
 }
