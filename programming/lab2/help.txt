@@ -1,0 +1,3 @@
+javac -d out -sourcepath src -cp lib/Pokemon.jar src/Main.java
+echo -e "Main-Class: Main\nClass-Path: lib/Pokemon.jar" > MANIFEST.mf
+jar cfm Main.jar MANIFEST.mf -C out .
