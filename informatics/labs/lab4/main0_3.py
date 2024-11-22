@@ -18,7 +18,7 @@ def yaml_to_json(yaml_file, json_file):
 
             if ":" in stripped_line:
                 key, value = map(str.strip, stripped_line.split(":", 1))
-                value = value if value else {} #Проверяем тип строки, создаем фигурные скобки или записываем значение
+                value = value if value else {} # Проверяем тип строки, создаем фигурные скобки или записываем значение
 
                 # Поднимаемся вверх по стеку, если уровень отступа меньше текущего
                 while stack and stack[-1][1] >= indent:

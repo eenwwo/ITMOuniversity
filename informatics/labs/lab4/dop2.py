@@ -1,83 +1,87 @@
 import re
-# Использование регулярных выражений
-def yaml_to_json_regex(yaml_file, json_file):
-    def parse_yaml_with_regex(yaml_content):
-        data = {}
-        current_day = None
-        current_lesson = None
 
-        # Разбираем YAML по строкам
-        for line in yaml_content.splitlines():
-            line = line.strip()
-            if not line:
+def yaml_to_json(yaml_file, json_file):
+    def otstup(line):
+        # Определяет уровень отступа в строке
+        return len(line) - len(line.lstrip())
+
+    def process_lines(lines):
+        # Обрабатывает строки YAML и создает вложенный словарь
+        root = {}  # Корневой объект
+        stack = [(root, -1)]  # Стек: объект и его уровень отступа
+        current_obj = root
+
+        # Регулярное выражение для парсинга строки
+        key_value_pattern = re.compile(r'^\s*(?P<key>[^:]+)\s*:\s*(?P<value>.*)$')
+
+        for line in lines:
+            stripped_line = line.strip()
+            if not stripped_line:  # Пропуск пустых строк
                 continue
 
-            # Ищем день недели
-            day_match = re.match(r"^([A-Za-z]+):$", line)
-            if day_match:
-                current_day = day_match.group(1)
-                if current_day not in data:
-                    data[current_day] = {}  # Инициализация дня
-                continue
+            indent = otstup(line)
 
-            # Ищем урок
-            lesson_match = re.match(r"^(lesson\d+):$", line)
-            if lesson_match:
-                current_lesson = lesson_match.group(1)
-                if current_day and current_day in data:
-                    if current_lesson not in data[current_day]:
-                        data[current_day][current_lesson] = {}  # Инициализация урока
-                continue
+            match = key_value_pattern.match(line)
+            if match:
+                key = match.group("key").strip()
+                value = match.group("value").strip()
 
-            # Ищем ключ-значение, при этом проверяем, если это вложенный объект
-            kv_match = re.match(r"^(\w+):\s*(.*)$", line)
-            if kv_match:
-                key = kv_match.group(1)
-                value = kv_match.group(2)
-
-                # Проверяем если текущий ключ указывает на вложенный объект
-                if value.startswith("{") and value.endswith("}"):
-                    # Это вложенный объект, начинаем новый уровень вложенности
+                # Проверка, является ли значение пустым (вложенный объект)
+                if value == "":
                     value = {}
 
-                # Если текущий день и урок существуют, добавляем данные
-                if current_day and current_lesson and current_day in data:
-                    if current_lesson not in data[current_day]:
-                        data[current_day][current_lesson] = {}
+                # Поднимаемся вверх по стеку, если уровень отступа меньше текущего
+                while stack and stack[-1][1] >= indent:
+                    stack.pop()
 
-                    # Добавляем или обновляем ключ-значение
-                    data[current_day][current_lesson][key] = value
+                # Если стек пуст, это ошибка в структуре YAML
+                if not stack:
+                    raise ValueError("Ошибка в структуре YAML: некорректные отступы.")
 
-        return data
+                # Добавляем текущий ключ-значение в текущий объект
+                current_obj = stack[-1][0]
+                if isinstance(value, dict):  # Для вложенного объекта
+                    current_obj[key] = {}
+                    stack.append((current_obj[key], indent))
+                else:
+                    current_obj[key] = value
+            else:
+                raise ValueError(f"Неправильный формат строки: {line}")
 
-    # Функция для преобразования словаря в читаемый формат JSON
+        return root
+
+    # Чтение YAML-файла
+    with open(yaml_file, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+    # Преобразование в словарь
+    data = process_lines(lines)
+
+    # Преобразование в JSON-формат (читаемый вручную)
     def dict_to_json(dictionary, indent=0):
         result = "{\n"
         for key, value in dictionary.items():
             result += " " * (indent + 4) + f'"{key}": '
+            # Если значение словарь, функция вызывает сама себя, увеличивая
+            # уровень доступа на 4 (рекурсивная обработка вложенных словарей)
+            # а если значение строка, добавляем в строку JSON в кавычках
             if isinstance(value, dict):
                 result += dict_to_json(value, indent + 4)
             else:
                 result += f'"{value}"'
             result += ",\n"
+        # Удаление последней запятой, добавление закрывающей фигурной скобки
+        # с нужным отступом
         result = result.rstrip(",\n") + "\n" + " " * indent + "}"
         return result
 
-    # Чтение YAML файла
-    with open(yaml_file, "r", encoding="utf-8") as file:
-        yaml_content = file.read()
+    json_data = dict_to_json(data)
 
-    # Парсинг YAML 
-    parsed_data = parse_yaml_with_regex(yaml_content)
-
-    # Преобразование в формат JSON
-    json_data = dict_to_json(parsed_data)
-
-    # Запись результата в файл
+    # Запись в JSON-файл
     with open(json_file, "w", encoding="utf-8") as file:
         file.write(json_data)
 
     print("Файл преобразован в формат JSON!")
 
 # Вызов функции
-yaml_to_json_regex("timetable.yml", "dop2timetable.json")
+yaml_to_json("timetable.yml", "dop2timetable.json")
